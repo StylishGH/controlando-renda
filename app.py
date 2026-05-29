@@ -1,41 +1,50 @@
 import streamlit as st
 
-st.set_page_config(page_title="Gestão de Serviços", layout="centered")
+st.set_page_config(page_title="Gestão Financeira Pro", layout="centered")
 
-st.title("🛠️ Controle de Serviços e Casa")
+st.title("💰 Controle de Metas & Caixinhas")
 
-# Configurações de metas (Defina aqui ou deixe ele definir)
-if 'total_recebido' not in st.session_state:
-    st.session_state.total_recebido = 0.0
+# Inicialização do estado
+if 'total_acumulado' not in st.session_state:
+    st.session_state.total_acumulado = 0.0
+if 'metas' not in st.session_state:
+    # Metas iniciais (prioridades)
+    st.session_state.metas = {"Casa": 3000.0, "Reserva": 1000.0, "Lazer": 500.0}
 
-st.sidebar.header("Configurações")
-meta_custos = st.sidebar.number_input("Meta Custo Fixo da Casa (R$)", value=3000.0)
+# 1. Entrada de Serviço
+st.sidebar.header("Novo Serviço")
+valor_servico = st.sidebar.number_input("Quanto ganhou neste serviço?", min_value=0.0, step=50.0)
+if st.sidebar.button("Adicionar ao Total"):
+    st.session_state.total_acumulado += valor_servico
 
-# Entrada de novo serviço
-st.header("Novo Serviço Realizado")
-nome_servico = st.text_input("Nome do serviço (ex: Manutenção na Rua X)")
-valor_servico = st.number_input("Valor recebido (R$)", min_value=0.0, step=50.0)
+# 2. Gerenciador de Metas (+)
+st.sidebar.divider()
+st.sidebar.header("Adicionar Meta (+)")
+nova_meta = st.sidebar.text_input("Nome da nova meta (ex: Carro, IPCA+)")
+valor_meta = st.sidebar.number_input("Valor total da meta", min_value=0.0)
+if st.sidebar.button("Criar Meta"):
+    st.session_state.metas[nova_meta] = valor_meta
 
-if st.button("Registrar Serviço"):
-    st.session_state.total_recebido += valor_servico
-    st.success(f"Serviço '{nome_servico}' registrado com sucesso!")
+# 3. Dashboard Principal
+st.subheader(f"Total Disponível: R$ {st.session_state.total_acumulado:.2f}")
 
-st.divider()
+st.write("### Progresso das suas Caixinhas")
 
-# Dashboard de Visualização
-st.subheader("Status Financeiro do Mês")
-col1, col2 = st.columns(2)
-col1.metric("Total Acumulado", f"R$ {st.session_state.total_recebido:.2f}")
-col2.metric("Meta da Casa", f"R$ {meta_custos:.2f}")
+# Lógica de distribuição (Prioridade de cima para baixo)
+saldo_restante = st.session_state.total_acumulado
 
-# Lógica de distribuição
-if st.session_state.total_recebido >= meta_custos:
-    sobra = st.session_state.total_recebido - meta_custos
-    st.success(f"✅ Custos da casa cobertos! Sobra livre para uso/reserva: **R$ {sobra:.2f}**")
-else:
-    falta = meta_custos - st.session_state.total_recebido
-    st.warning(f"⚠️ Ainda faltam R$ {falta:.2f} para quitar os custos da casa.")
+for nome, valor in st.session_state.metas.items():
+    # Cálculo de quanto falta para essa meta
+    progresso = min(saldo_restante / valor, 1.0) if valor > 0 else 1.0
+    
+    col1, col2 = st.columns([3, 1])
+    col1.write(f"**{nome}**")
+    col2.write(f"R$ {min(saldo_restante, valor):.2f} / R$ {valor:.2f}")
+    st.progress(progresso)
+    
+    saldo_restante -= valor
+    if saldo_restante < 0: saldo_restante = 0
 
-if st.button("Limpar Mês (Novo Ciclo)"):
-    st.session_state.total_recebido = 0.0
+if st.button("Resetar Mês"):
+    st.session_state.total_acumulado = 0.0
     st.rerun()
