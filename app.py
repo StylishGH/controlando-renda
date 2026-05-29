@@ -31,8 +31,18 @@ if st.sidebar.button("Lançar Entrada"):
 # Registrar Gasto
 g_desc = st.sidebar.text_input("Gasto (ex: Material, Gasolina)")
 g_val = st.sidebar.number_input("Valor Gasto (R$)", min_value=0.0)
-if st.sidebar.button("Lançar Gasto"):
-    st.session_state.gastos.append({"desc": g_desc, "valor": g_val})
+import pandas as pd # Certifique-se de ter essa importação no topo
+
+st.subheader("Lista de Gastos")
+
+if st.session_state.gastos:
+    # Transforma a lista de dicionários em uma tabela bonita do Pandas
+    df_gastos = pd.DataFrame(st.session_state.gastos)
+    
+    # Exibe como uma tabela limpa
+    st.table(df_gastos)
+else:
+    st.write("Nenhum gasto registrado ainda.")
 
 # --- CÁLCULOS ---
 total_recebido = sum(s['recebido'] for s in st.session_state.servicos)
