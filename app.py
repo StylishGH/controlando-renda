@@ -1,36 +1,41 @@
 import streamlit as st
 
-# Configuração da página
-st.set_page_config(page_title="Gestão Financeira", layout="centered")
+st.set_page_config(page_title="Gestão de Serviços", layout="centered")
 
-st.title("💰 Controle Financeiro Familiar")
+st.title("🛠️ Controle de Serviços e Casa")
 
-# Configurações de metas (input do usuário para não deixar valores expostos no código)
+# Configurações de metas (Defina aqui ou deixe ele definir)
+if 'total_recebido' not in st.session_state:
+    st.session_state.total_recebido = 0.0
+
 st.sidebar.header("Configurações")
-meta_salario = st.sidebar.number_input("Definir Salário Fixo (R$)", min_value=0.0, value=0.0, step=100.0)
-meta_custos = st.sidebar.number_input("Definir Custos Fixos (R$)", min_value=0.0, value=0.0, step=100.0)
+meta_custos = st.sidebar.number_input("Meta Custo Fixo da Casa (R$)", value=3000.0)
 
-# Input de entrada do mês
-st.header("Entrada de Valores")
-renda_mes = st.number_input("Quanto entrou de dinheiro no total este mês? (R$)", min_value=0.0, step=100.0)
+# Entrada de novo serviço
+st.header("Novo Serviço Realizado")
+nome_servico = st.text_input("Nome do serviço (ex: Manutenção na Rua X)")
+valor_servico = st.number_input("Valor recebido (R$)", min_value=0.0, step=50.0)
 
-# Lógica de cálculo
-meta_total = meta_salario + meta_custos
-sobra = renda_mes - meta_total
+if st.button("Registrar Serviço"):
+    st.session_state.total_recebido += valor_servico
+    st.success(f"Serviço '{nome_servico}' registrado com sucesso!")
 
 st.divider()
 
-if renda_mes > 0:
-    if renda_mes < meta_total:
-        st.error(f"⚠️ Atenção! Renda insuficiente. Faltam R$ {abs(sobra):.2f} para cobrir as metas.")
-    else:
-        st.success(f"✅ Mês positivo! Reserva de Emergência garantida: R$ {sobra:.2f}")
-        st.info(f"Saldo disponível para gastos pessoais: **R$ {meta_salario:.2f}**")
-    
-    # Barra de progresso visual
-    if meta_total > 0:
-        progresso = min(renda_mes / meta_total, 1.0)
-        st.progress(progresso)
-        st.write(f"Progresso da meta: {(progresso * 100):.1f}%")
+# Dashboard de Visualização
+st.subheader("Status Financeiro do Mês")
+col1, col2 = st.columns(2)
+col1.metric("Total Acumulado", f"R$ {st.session_state.total_recebido:.2f}")
+col2.metric("Meta da Casa", f"R$ {meta_custos:.2f}")
+
+# Lógica de distribuição
+if st.session_state.total_recebido >= meta_custos:
+    sobra = st.session_state.total_recebido - meta_custos
+    st.success(f"✅ Custos da casa cobertos! Sobra livre para uso/reserva: **R$ {sobra:.2f}**")
 else:
-    st.write("Aguardando entrada de valores...")
+    falta = meta_custos - st.session_state.total_recebido
+    st.warning(f"⚠️ Ainda faltam R$ {falta:.2f} para quitar os custos da casa.")
+
+if st.button("Limpar Mês (Novo Ciclo)"):
+    st.session_state.total_recebido = 0.0
+    st.rerun()
