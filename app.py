@@ -1,11 +1,15 @@
 ```python
 import streamlit as st
 
-st.set_page_config(page_title="Gestão da Casa", page_icon="💰")
+st.title("💰 Controle Financeiro")
 
-# Configurações iniciais
-SALARIO_FIXO = 4000.00
-CUSTOS_FIXOS = 3000.00
+# O usuário define as metas ao abrir o site, nada fica salvo no código
+meta_salario = st.sidebar.number_input("Definir Salário Fixo", value=0.0)
+meta_custos = st.sidebar.number_input("Definir Custos Fixos", value=0.0)
+
+renda = st.number_input("Renda do mês", value=0.0)
+
+# O restante da lógica continua igual...
 
 st.title("💰 Controle Financeiro")
 
