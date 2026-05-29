@@ -1,24 +1,24 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(page_title="Gestão Financeira Pro", layout="wide")
 
 st.title("💰 Controle Financeiro Familiar 360º")
 
-# Inicialização dos estados (memória do app)
+# Inicialização dos estados
 if 'servicos' not in st.session_state: st.session_state.servicos = []
 if 'gastos' not in st.session_state: st.session_state.gastos = []
 
-# --- CONFIGURAÇÃO DE METAS (Editável na tela) ---
+# --- CONFIGURAÇÃO DE METAS ---
 st.sidebar.header("⚙️ Configurar Metas do Mês")
 meta_casa = st.sidebar.number_input("Meta: Casa (R$)", value=3000.0)
 meta_reserva = st.sidebar.number_input("Meta: Reserva (R$)", value=1000.0)
 meta_lazer = st.sidebar.number_input("Meta: Lazer (R$)", value=500.0)
 meta_invest = st.sidebar.number_input("Meta: Carro/Investimento (R$)", value=500.0)
 
-# Dicionário de metas dinâmico
 metas = {"Casa": meta_casa, "Reserva": meta_reserva, "Lazer": meta_lazer, "Investimento": meta_invest}
 
-# --- ENTRADAS E GASTOS ---
+# --- ENTRADAS E GASTOS (SIDEBAR) ---
 st.sidebar.divider()
 st.sidebar.header("Fluxo de Caixa")
 
@@ -27,22 +27,14 @@ s_nome = st.sidebar.text_input("Serviço (ex: Rua Vênus)")
 s_val = st.sidebar.number_input("Valor Recebido (R$)", min_value=0.0)
 if st.sidebar.button("Lançar Entrada"):
     st.session_state.servicos.append({"nome": s_nome, "recebido": s_val})
+    st.rerun()
 
 # Registrar Gasto
 g_desc = st.sidebar.text_input("Gasto (ex: Material, Gasolina)")
 g_val = st.sidebar.number_input("Valor Gasto (R$)", min_value=0.0)
-import pandas as pd # Certifique-se de ter essa importação no topo
-
-st.subheader("Lista de Gastos")
-
-if st.session_state.gastos:
-    # Transforma a lista de dicionários em uma tabela bonita do Pandas
-    df_gastos = pd.DataFrame(st.session_state.gastos)
-    
-    # Exibe como uma tabela limpa
-    st.table(df_gastos)
-else:
-    st.write("Nenhum gasto registrado ainda.")
+if st.sidebar.button("Lançar Gasto"):
+    st.session_state.gastos.append({"desc": g_desc, "valor": g_val})
+    st.rerun()
 
 # --- CÁLCULOS ---
 total_recebido = sum(s['recebido'] for s in st.session_state.servicos)
@@ -59,7 +51,11 @@ with col1:
     st.metric("Saldo Líquido", f"R$ {saldo_livre:.2f}")
     
     st.subheader("Lista de Gastos")
-    st.write(st.session_state.gastos)
+    if st.session_state.gastos:
+        df_gastos = pd.DataFrame(st.session_state.gastos)
+        st.table(df_gastos)
+    else:
+        st.write("Nenhum gasto registrado.")
 
 with col2:
     st.subheader("Distribuição do Saldo")
