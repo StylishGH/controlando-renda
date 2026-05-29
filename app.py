@@ -1,28 +1,36 @@
-```python
 import streamlit as st
 
-st.title("💰 Controle Financeiro")
+# Configuração da página
+st.set_page_config(page_title="Gestão Financeira", layout="centered")
 
-# O usuário define as metas ao abrir o site, nada fica salvo no código
-meta_salario = st.sidebar.number_input("Definir Salário Fixo", value=0.0)
-meta_custos = st.sidebar.number_input("Definir Custos Fixos", value=0.0)
+st.title("💰 Controle Financeiro Familiar")
 
-renda = st.number_input("Renda do mês", value=0.0)
+# Configurações de metas (input do usuário para não deixar valores expostos no código)
+st.sidebar.header("Configurações")
+meta_salario = st.sidebar.number_input("Definir Salário Fixo (R$)", min_value=0.0, value=0.0, step=100.0)
+meta_custos = st.sidebar.number_input("Definir Custos Fixos (R$)", min_value=0.0, value=0.0, step=100.0)
 
-# O restante da lógica continua igual...
+# Input de entrada do mês
+st.header("Entrada de Valores")
+renda_mes = st.number_input("Quanto entrou de dinheiro no total este mês? (R$)", min_value=0.0, step=100.0)
 
-st.title("💰 Controle Financeiro")
-
-renda_mes = st.number_input("Quanto entrou no total este mês?", min_value=0.0, step=100.0)
-
-meta_total = SALARIO_FIXO + CUSTOS_FIXOS
+# Lógica de cálculo
+meta_total = meta_salario + meta_custos
 sobra = renda_mes - meta_total
+
+st.divider()
 
 if renda_mes > 0:
     if renda_mes < meta_total:
-        st.error(f"⚠️ Atenção! Renda insuficiente. Faltam R$ {abs(sobra):.2f} para as metas.")
+        st.error(f"⚠️ Atenção! Renda insuficiente. Faltam R$ {abs(sobra):.2f} para cobrir as metas.")
     else:
-        st.success(f"✅ Mês positivo! Reserva de Emergência: R$ {sobra:.2f}")
-        st.info(f"Saldo para gastos pessoais: **R$ {SALARIO_FIXO:.2f}**")
+        st.success(f"✅ Mês positivo! Reserva de Emergência garantida: R$ {sobra:.2f}")
+        st.info(f"Saldo disponível para gastos pessoais: **R$ {meta_salario:.2f}**")
     
-    st.progress(min(renda_mes / meta_total, 1.0))
+    # Barra de progresso visual
+    if meta_total > 0:
+        progresso = min(renda_mes / meta_total, 1.0)
+        st.progress(progresso)
+        st.write(f"Progresso da meta: {(progresso * 100):.1f}%")
+else:
+    st.write("Aguardando entrada de valores...")
